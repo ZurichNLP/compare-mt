@@ -362,7 +362,48 @@ def generate_sentence_examples(ref, outs, src=None,
                                              compare_directions=direcs,
                                              title=title)
   reporter.generate_report()
-  return reporter 
+  return reporter
+
+
+def generate_repetitions_report(ref, outs, src=None,
+                                title=None):
+
+    repetition_stats = repetition_utils.stats(ref=ref,
+                                        outs=outs,
+                                        src=src)
+
+    reporter = reporters.RepetitionReport(ref=ref,
+                                          outs=outs,
+                                          src=src,
+                                          repetition_stats=repetition_stats,
+                                          title=title)
+
+    reporter.generate_report()
+
+    return reporter
+
+
+def generate_repetitions_examples(ref, outs, src=None,
+                                  report_length=10,
+                                  title=None):
+    report_length = int(report_length)
+
+    repetition_examples = repetition_utils.examples(ref=ref,
+                                                 outs=outs,
+                                                 src=src,
+                                                 report_length=report_length)
+
+    reporter = reporters.RepetitionExamplesReport(ref=ref,
+                                                  outs=outs,
+                                                  src=src,
+                                                  repetition_examples=repetition_examples,
+                                                  title=title,
+                                                  report_length=report_length)
+
+    reporter.generate_report()
+
+    return reporter
+
 
 def main():
   parser = argparse.ArgumentParser(
@@ -416,6 +457,19 @@ def main():
                       Compare sentences. Can specify arguments in 'arg1=val1,arg2=val2,...' format.
                       See documentation for 'generate_sentence_examples' to see which arguments are available.
                       """)
+  parser.add_argument('--compare_repetitions', type=str, nargs='*',
+                      default=None,
+                      help="""
+                        Compare repetition statistics. Can specify arguments in 'arg1=val1,arg2=val2,...' format.
+                        See documentation for 'generate_repetitions_report' to see which arguments are available.
+                        """)
+  parser.add_argument('--compare_repetition_examples', type=str, nargs='*',
+                      default=None,
+                      help="""
+                        Compare sentences that contain repetitions. Can specify arguments in 'arg1=val1,arg2=val2,...' format.
+                        See documentation for 'generate_repetition_examples' to see which arguments are available.
+                        """)
+
   parser.add_argument('--output_directory', type=str, default=None,
                       help="""
                       A path to a directory where a graphical report will be saved. Open index.html in the directory

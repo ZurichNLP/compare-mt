@@ -472,6 +472,27 @@ class SentenceExampleReport(Report):
     return html
 
 
+class RepetitionReport(Report):
+
+  def __init__(self, ref=None, outs=None, src=None, title=None, repetition_stats=None):
+    self.ref = ref
+    self.outs = outs
+    self.src = src
+    self.title = title
+    self.repetition_stats = repetition_stats
+
+
+class RepetitionExamplesReport(Report):
+
+  def __init__(self, ref=None, outs=None, src=None, title=None, report_length=None, repetition_examples=None):
+    self.ref = ref
+    self.outs = outs
+    self.src = src
+    self.title = title
+    self.report_length = report_length
+    self.repetition_examples = repetition_examples
+
+
 def tag_str(tag, str, new_line=''):
   return f'<{tag}>{new_line} {str} {new_line}</{tag}>'
 
