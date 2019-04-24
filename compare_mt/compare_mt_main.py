@@ -12,6 +12,7 @@ from compare_mt import bucketers
 from compare_mt import reporters
 from compare_mt import arg_utils
 from compare_mt import formatting
+from compare_mt import repetition_utils
 
 def generate_score_report(ref, outs,
                        score_type='bleu',
