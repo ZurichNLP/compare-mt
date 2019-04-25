@@ -100,14 +100,14 @@ def make_bar_chart(datas,
   plt.savefig(out_file, format=output_fig_format, bbox_inches='tight')
 
 def html_img_reference(fig_file, title):
-  latex_code = (
-    r"\\begin{figure}[h]\n"+
-    r"  \centering\n"+
-    r"  \includegraphics{"+fig_file+".pdf}\n"+
-    r"  \caption{"+title+"}\n"+
-    r"  \label{fig:"+fig_file+"}\n"+
-    r"\end{figure}"
-  )
+
+  latex_code_pieces = [r"\begin{figure}[h]",
+                       r"  \centering",
+                       r"  \includegraphics{" + fig_file + ".pdf}",
+                       r"  \caption{" + title + "}",
+                       r"  \label{fig:" + fig_file + "}",
+                       r"\end{figure}"]
+  latex_code = "\n".join(latex_code_pieces)
   return (f'<img src="{fig_file}.png" alt="{title}"> <br/>' +
           f'<button onclick="showhide(\'{fig_file}_latex\')">Show/Hide LaTeX</button> <br/>' +
           f'<pre id="{fig_file}_latex" style="display:none">{latex_code}</pre>')
@@ -484,6 +484,8 @@ class RepetitionReport(Report):
     self.ngram_order = ngram_order
     self.subtract_legitimate_reps = subtract_legitimate_reps
 
+    self.output_fig_file = f'{next_fig_id()}-total-reps'
+
     if title:
       self.title = title
     else:
@@ -496,6 +498,33 @@ class RepetitionReport(Report):
     for sys_name, reps_total in zip(sys_names, self.repetition_stats):
       print(f'{sys_name}\t{reps_total}')
     print()
+
+  def plot(self, output_directory='outputs', output_fig_file='rep-stats', output_fig_format='pdf'):
+    sys = [[score] for score in self.repetition_stats]
+
+    make_bar_chart(sys,
+                   output_directory, output_fig_file,
+                   output_fig_format=output_fig_format,
+                   xlabel="", ylabel="TOTAL_REPS_IN_CORPUS",
+                   xticklabels=None)
+
+  def html_content(self, output_directory=None):
+
+    html = tag_str('p', self.title)
+
+    table = [['', 'TOTAL_REPS_IN_CORPUS']]
+
+    for sys_name, reps_total in zip(sys_names, self.repetition_stats):
+
+      table.append([f'{sys_name}', f'{reps_total}'])
+
+    html += html_table(table, None)
+
+    for ext in ('png', 'pdf'):
+      self.plot(output_directory, self.output_fig_file, ext)
+    html += html_img_reference(self.output_fig_file, 'Repetition Statistics Analysis')
+
+    return html
 
 
 class RepetitionExamplesReport(Report):
@@ -531,6 +560,25 @@ class RepetitionExamplesReport(Report):
 
   def plot(self, output_directory, output_fig_file, output_fig_format='pdf'):
     pass
+
+  def html_content(self, output_directory=None):
+
+    html = tag_str('p', self.title)
+
+    for sys_name, examples, out in zip(sys_names, self.repetition_examples, self.outs):
+      html += tag_str('h4', f'{self.report_length} worst examples from {sys_name}')
+
+      for index in examples:
+        table = [['', 'Output']]
+
+        if self.src:
+          table.append(['Src', ' '.join(self.src[index])])
+        table.append(['Ref', ' '.join(self.ref[index])])
+        table.append([f'{sys_name}', ' '.join(out[index])])
+
+        html += html_table(table, None)
+
+    return html
 
 
 def tag_str(tag, str, new_line=''):
