@@ -1,6 +1,8 @@
 # Overall imports
 import argparse
 import operator
+import langid
+from collections import defaultdict
 
 # In-package imports
 from compare_mt import ngram_utils
@@ -364,6 +366,29 @@ def generate_sentence_examples(ref, outs, src=None,
   reporter.generate_report()
   return reporter 
 
+def generate_lang_id_report(ref, outs,
+                            min_length=5,
+                            print_lines=False):
+    lang_id_reports=[]
+    lang_id_lines_reports=[]
+    for out in outs:
+        langs = defaultdict(int)
+        lang_lines = defaultdict(list)
+        for i, sentence in enumerate(out):
+            if len(sentence) >= int(min_length):
+                (lang, prob) = langid.classify(corpus_utils.list2str(sentence))
+                langs[lang] +=1
+                lang_lines[lang].append(i)
+            else:
+                langs["shorter than min_length"] +=1
+                lang_lines["shorter than min_length"].append(i)
+        lang_id_reports.append(langs)  
+        lang_id_lines_reports.append(lang_lines) 
+
+    reporter = reporters.LangIDreport(lang_id_reports, lang_id_lines_reports,print_lines)
+    reporter.generate_report()
+    return reporter
+
 def main():
   parser = argparse.ArgumentParser(
       description='Program to compare MT results',
@@ -429,6 +454,12 @@ def main():
                       help="Number of decimals to print for floating point numbers")
   parser.add_argument('--scorer_scale', type=float, default=100, choices=[1, 100],
                       help="Set the scale of BLEU, METEOR, WER and chrF to 0-1 or 0-100 (default 0-100)")
+  parser.add_argument('--lang_id', type=str, nargs='*',
+                      default=['min_length=min_length,print_lines=False'],
+                      help="""
+                      Use language identification on output. Can specify arguments in 'arg1=val1,arg2=val2,...' format.
+                      Set minimum length for segments to be analyzed with language identification (the shorter the segment, the more unreliable the analysis), default=5.
+                      """) 
   args = parser.parse_args()
 
   # Set formatting
@@ -452,7 +483,8 @@ def main():
     (args.compare_scores, generate_score_report, 'Aggregate Scores', False),
     (args.compare_word_accuracies, generate_word_accuracy_report, 'Word Accuracies', False),
     (args.compare_src_word_accuracies, generate_src_word_accuracy_report, 'Source Word Accuracies', True),
-    (args.compare_sentence_buckets, generate_sentence_bucketed_report, 'Sentence Buckets', False)]
+    (args.compare_sentence_buckets, generate_sentence_bucketed_report, 'Sentence Buckets', False),
+    (args.lang_id, generate_lang_id_report, 'Language Identification', False)]
   if len(outs) > 1:
     report_types += [
       (args.compare_ngrams, generate_ngram_report, 'Characteristic N-grams', False),
