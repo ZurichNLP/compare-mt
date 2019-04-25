@@ -119,7 +119,7 @@ class TestRepetitionUtils(unittest.TestCase):
                "This is the second test sentence".split(" "),
                "This is the third third third test sentence".split(" ")]
 
-        expected = [out[0], out[2]]
+        expected = [0, 2]
 
         actual = repetition_examples_from_corpus(out=out,
                                                  ref=ref,
@@ -129,4 +129,4 @@ class TestRepetitionUtils(unittest.TestCase):
                                                  ngram_order=1,
                                                  ignore_legitimate_reps=False)
 
-        self.assertEqual(expected, actual, "Wrong examples from corpus.")
+        self.assertEqual(expected, actual, "Wrong worst indexes from corpus.")

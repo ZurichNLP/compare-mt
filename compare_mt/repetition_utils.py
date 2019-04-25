@@ -36,19 +36,21 @@ def repetition_stats(ref: Sentences,
     rep_totals_per_out = []  # type: List[int]
 
     for out in outs:
-        rep_total = repetition_stats_in_corpus(ref, out, src, adjacent,
-                                               ngram_order, subtract_legitimate_reps)
+        reps_per_line = repetition_stats_in_corpus(ref, out, src, adjacent,
+                                                   ngram_order, subtract_legitimate_reps)
+
+        rep_total = sum(reps_per_line)
         rep_totals_per_out.append(rep_total)
 
     return rep_totals_per_out
 
 
 def repetition_stats_in_corpus(ref: Sentences,
-                                out: Sentences,
-                                src: Optional[Sentences] = None,
-                                adjacent: bool = True,
-                                ngram_order: int = 1,
-                                subtract_legitimate_reps: bool = False) -> List[int]:
+                               out: Sentences,
+                               src: Optional[Sentences] = None,
+                               adjacent: bool = True,
+                               ngram_order: int = 1,
+                               subtract_legitimate_reps: bool = False) -> List[int]:
     """
     For each sentence translated by a system, collects the number of repeated elements.
 
@@ -66,8 +68,7 @@ def repetition_stats_in_corpus(ref: Sentences,
 
     reps_per_line = []
 
-    if src is None:
-        src_lines = []
+    src_lines = [] if src is None else src
 
     for out_line, ref_line, src_line in itertools.zip_longest(out, ref, src_lines):
 
@@ -87,6 +88,7 @@ def repetition_stats_in_corpus(ref: Sentences,
 
     return reps_per_line
 
+
 def repetition_examples(ref: Sentences,
                         outs: List[Sentences],
                         src: Optional[Sentences] = None,
@@ -94,10 +96,10 @@ def repetition_examples(ref: Sentences,
                         adjacent: bool = True,
                         ngram_order: int = 1,
                         ignore_legitimate_reps: bool = False
-                        ) -> List[Sentences]:
+                        ) -> List[List[int]]:
     """
-    Find the worst examples of repeated material in each set of system
-    translations (outs).
+    Find the indexes of the worst examples of repeated material in
+    each set of system translations (outs).
 
     :param ref: Lines from a reference corpus, in the target language.
     :param outs: Lines from several system hypotheses.
@@ -112,14 +114,15 @@ def repetition_examples(ref: Sentences,
     :return:
     """
 
-    examples_per_out = []
+    indexes_per_out = []
 
     for out in outs:
-        examples = repetition_examples_from_corpus(out, ref, src, num_examples, adjacent,
+        indexes = repetition_examples_from_corpus(out, ref, src, num_examples, adjacent,
                                                    ngram_order, ignore_legitimate_reps)
-        examples_per_out.append(examples)
+        indexes_per_out.append(indexes)
 
-    return examples_per_out
+    return indexes_per_out
+
 
 def repetition_examples_from_corpus(out: Sentences,
                                     ref: Sentences,
@@ -128,9 +131,9 @@ def repetition_examples_from_corpus(out: Sentences,
                                     adjacent: bool = True,
                                     ngram_order: int = 1,
                                     ignore_legitimate_reps: bool = False
-                                    ) -> Sentences:
+                                    ) -> List[int]:
     """
-    Find the worst examples of repeated material in a corpus (out).
+    Find the indexes of the worst examples of repeated material in a corpus (out).
 
     :param out: Translations from a single system.
     :param ref: Lines from a reference corpus, in the target language.
@@ -146,16 +149,16 @@ def repetition_examples_from_corpus(out: Sentences,
     """
 
     rep_stats = repetition_stats_in_corpus(ref, out, src, adjacent,
-                                            ngram_order, ignore_legitimate_reps)
+                                           ngram_order, ignore_legitimate_reps)
 
     # reverse sort index
     sort_index = np.argsort(rep_stats, )[::-1]
 
+    # truncate to length of report
     trunc_index = sort_index[:num_examples]
 
-    worst_examples = [out[i] for i in trunc_index]
+    return trunc_index.tolist()
 
-    return worst_examples
 
 def num_repetitions_in_sentence(sentence: Tokens,
                                 adjacent: bool = True,
@@ -192,10 +195,11 @@ def num_repetitions_in_sentence(sentence: Tokens,
 
     return num_repetitions
 
+
 def num_repetitions_in_sentence_pair(src_sentence: Tokens,
                                      trg_sentence: Tokens,
                                      adjacent: bool = True,
-                                     ngram_order: int = 1) -> Tuple[int,int]:
+                                     ngram_order: int = 1) -> Tuple[int, int]:
     """
 
     :param src_sentence: Line in source language.

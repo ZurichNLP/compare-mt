@@ -474,23 +474,63 @@ class SentenceExampleReport(Report):
 
 class RepetitionReport(Report):
 
-  def __init__(self, ref=None, outs=None, src=None, title=None, repetition_stats=None):
+  def __init__(self, ref=None, outs=None, src=None, title=None, repetition_stats=None,
+               adjacent=True, ngram_order=1, subtract_legitimate_reps=False):
     self.ref = ref
     self.outs = outs
     self.src = src
-    self.title = title
     self.repetition_stats = repetition_stats
+    self.adjacent = adjacent
+    self.ngram_order = ngram_order
+    self.subtract_legitimate_reps = subtract_legitimate_reps
+
+    if title:
+      self.title = title
+    else:
+      self.title = f'adjacent={adjacent}, ngram_order={ngram_order}, subtract_legitimate_reps={subtract_legitimate_reps}'
+
+  def print(self):
+    self.print_header('Repetition Statistics Analysis')
+    print(f'--- {self.title}')
+    print(f'\tTOTAL REPS IN CORPUS')
+    for sys_name, reps_total in zip(sys_names, self.repetition_stats):
+      print(f'{sys_name}\t{reps_total}')
+    print()
 
 
 class RepetitionExamplesReport(Report):
 
-  def __init__(self, ref=None, outs=None, src=None, title=None, report_length=None, repetition_examples=None):
+  def __init__(self, ref=None, outs=None, src=None, title=None, report_length=10, repetition_examples=None,
+               adjacent=True, ngram_order=1, ignore_legitimate_reps=False):
     self.ref = ref
     self.outs = outs
     self.src = src
     self.title = title
     self.report_length = report_length
     self.repetition_examples = repetition_examples
+
+    if title:
+      self.title = title
+    else:
+      self.title = f'adjacent={adjacent}, ngram_order={ngram_order}, ignore_legitimate_reps={ignore_legitimate_reps}, report_length={report_length}'
+
+  def print(self):
+    self.print_header('Repetition Examples Analysis')
+    print(f'--- {self.title}')
+
+    for sys_name, examples, out in zip(sys_names, self.repetition_examples, self.outs):
+      print()
+      print(f'--- {self.report_length} worst examples from {sys_name}')
+      for index in examples:
+        if self.src:
+          print(f"Src:  {' '.join(self.src[index])}")
+        print(f"Ref:  {' '.join(self.ref[index])}")
+        print(f"{sys_name}: {' '.join(out[index])}")
+        print()
+    print()
+
+  def plot(self, output_directory, output_fig_file, output_fig_format='pdf'):
+    pass
 
 
 def tag_str(tag, str, new_line=''):

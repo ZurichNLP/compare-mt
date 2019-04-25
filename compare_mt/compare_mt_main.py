@@ -366,40 +366,55 @@ def generate_sentence_examples(ref, outs, src=None,
   return reporter
 
 
-def generate_repetitions_report(ref, outs, src=None,
-                                title=None):
+def generate_repetitions_report(ref, outs, src=None, title=None, adjacent=True,
+                                ngram_order=1, subtract_legitimate_reps=False):
 
-    repetition_stats = repetition_utils.stats(ref=ref,
-                                        outs=outs,
-                                        src=src)
+    ngram_order = int(ngram_order)
+
+    repetition_stats = repetition_utils.repetition_stats(ref=ref,
+                                                         outs=outs,
+                                                         src=src,
+                                                         adjacent=adjacent,
+                                                         ngram_order=ngram_order,
+                                                         subtract_legitimate_reps=subtract_legitimate_reps)
 
     reporter = reporters.RepetitionReport(ref=ref,
                                           outs=outs,
                                           src=src,
                                           repetition_stats=repetition_stats,
-                                          title=title)
+                                          title=title,
+                                          adjacent=adjacent,
+                                          ngram_order=ngram_order,
+                                          subtract_legitimate_reps=subtract_legitimate_reps)
 
     reporter.generate_report()
 
     return reporter
 
 
-def generate_repetitions_examples(ref, outs, src=None,
-                                  report_length=10,
-                                  title=None):
-    report_length = int(report_length)
+def generate_repetitions_examples(ref, outs, src=None, report_length=10, title=None, adjacent=True,
+                                  ngram_order=1, ignore_legitimate_reps=False):
 
-    repetition_examples = repetition_utils.examples(ref=ref,
-                                                 outs=outs,
-                                                 src=src,
-                                                 report_length=report_length)
+    report_length = int(report_length)
+    ngram_order = int(ngram_order)
+
+    repetition_examples = repetition_utils.repetition_examples(ref=ref,
+                                                               outs=outs,
+                                                               src=src,
+                                                               num_examples=report_length,
+                                                               adjacent=adjacent,
+                                                               ngram_order=ngram_order,
+                                                               ignore_legitimate_reps=ignore_legitimate_reps)
 
     reporter = reporters.RepetitionExamplesReport(ref=ref,
                                                   outs=outs,
                                                   src=src,
                                                   repetition_examples=repetition_examples,
                                                   title=title,
-                                                  report_length=report_length)
+                                                  report_length=report_length,
+                                                  adjacent=adjacent,
+                                                  ngram_order=ngram_order,
+                                                  ignore_legitimate_reps=ignore_legitimate_reps)
 
     reporter.generate_report()
 
@@ -507,7 +522,9 @@ def main():
     (args.compare_scores, generate_score_report, 'Aggregate Scores', False),
     (args.compare_word_accuracies, generate_word_accuracy_report, 'Word Accuracies', False),
     (args.compare_src_word_accuracies, generate_src_word_accuracy_report, 'Source Word Accuracies', True),
-    (args.compare_sentence_buckets, generate_sentence_bucketed_report, 'Sentence Buckets', False)]
+    (args.compare_sentence_buckets, generate_sentence_bucketed_report, 'Sentence Buckets', False),
+    (args.compare_repetitions, generate_repetitions_report, 'Repetition Statistics', True),
+    (args.compare_repetition_examples, generate_repetitions_examples, 'Repetition Examples', True)]
   if len(outs) > 1:
     report_types += [
       (args.compare_ngrams, generate_ngram_report, 'Characteristic N-grams', False),
