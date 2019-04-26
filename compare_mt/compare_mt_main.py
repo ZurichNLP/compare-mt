@@ -368,25 +368,36 @@ def generate_sentence_examples(ref, outs, src=None,
 
 def generate_lang_id_report(ref, outs,
                             min_length=5,
-                            print_lines=False):
+                            print_lines=False,
+                            print_line_numbers=False):
     wtl = WhatTheLang()
     lang_id_reports=[]
     lang_id_lines_reports=[]
+    lang_id_line_numbers_reports=[]
     for out in outs:
         langs = defaultdict(int)
         lang_lines = defaultdict(list)
+        lang_line_numbers = defaultdict(list)
         for i, sentence in enumerate(out, start=1):
+            line = corpus_utils.list2str(sentence)
             if len(sentence) >= int(min_length):
-                lang = wtl.predict_lang(corpus_utils.list2str(sentence))
+                lang = wtl.predict_lang(line)
                 langs[lang] +=1
-                lang_lines[lang].append(i)
+                if print_line_numbers:
+                    lang_line_numbers[lang].append(i)
+                if print_lines:    
+                    lang_lines[lang].append(line)
             else:
                 langs["shorter than min_length"] +=1
-                lang_lines["shorter than min_length"].append(i)
+                if print_line_numbers:
+                    lang_line_numbers["shorter than min_length"].append(i)
+                if print_lines:
+                    lang_lines["shorter than min_length"].append(line)
         lang_id_reports.append(langs)  
-        lang_id_lines_reports.append(lang_lines) 
+        lang_id_lines_reports.append(lang_lines)
+        lang_id_line_numbers_reports.append(lang_line_numbers)
 
-    reporter = reporters.LangIDreport(lang_id_reports, lang_id_lines_reports,print_lines)
+    reporter = reporters.LangIDreport(lang_id_reports, lang_id_lines_reports, lang_id_line_numbers_reports,print_lines,print_line_numbers)
     reporter.generate_report()
     return reporter
 
@@ -456,7 +467,7 @@ def main():
   parser.add_argument('--scorer_scale', type=float, default=100, choices=[1, 100],
                       help="Set the scale of BLEU, METEOR, WER and chrF to 0-1 or 0-100 (default 0-100)")
   parser.add_argument('--lang_id', type=str, nargs='*',
-                      default=['min_length=min_length,print_lines=False'],
+                      default=['min_length=min_length,print_lines=False,print_line_numbers=False'],
                       help="""
                       Use language identification on output. Can specify arguments in 'arg1=val1,arg2=val2,...' format.
                       Set minimum length for segments to be analyzed with language identification (the shorter the segment, the more unreliable the analysis), default=5.
