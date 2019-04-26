@@ -2,6 +2,7 @@
 import argparse
 import operator
 from whatthelang import WhatTheLang
+import langid
 from collections import defaultdict
 
 # In-package imports
@@ -381,7 +382,13 @@ def generate_lang_id_report(ref, outs,
         for i, sentence in enumerate(out, start=1):
             line = corpus_utils.list2str(sentence)
             if len(sentence) >= int(min_length):
-                lang = wtl.predict_lang(line)
+                (lang_langid, prob) = langid.classify(line)
+                lang_wtl = wtl.predict_lang(line)
+                lang = ""
+                if lang_wtl==lang_langid:
+                    lang=lang_wtl
+                else:
+                    lang="differing output between langid and wtl"
                 langs[lang] +=1
                 if print_line_numbers:
                     lang_line_numbers[lang].append(i)

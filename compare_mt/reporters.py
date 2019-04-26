@@ -490,7 +490,6 @@ class LangIDreport(Report):
             print("Output {}:".format(i))
             for lang, v in sorted_langs:
                 print("\t {}: {}%".format(lang, float(v/total_sents *100)))
-                
             # print lines classified as minority languages
             if self.print_lines:
                 print()
