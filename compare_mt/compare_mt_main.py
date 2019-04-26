@@ -1,7 +1,7 @@
 # Overall imports
 import argparse
 import operator
-import langid
+from whatthelang import WhatTheLang
 from collections import defaultdict
 
 # In-package imports
@@ -369,14 +369,15 @@ def generate_sentence_examples(ref, outs, src=None,
 def generate_lang_id_report(ref, outs,
                             min_length=5,
                             print_lines=False):
+    wtl = WhatTheLang()
     lang_id_reports=[]
     lang_id_lines_reports=[]
     for out in outs:
         langs = defaultdict(int)
         lang_lines = defaultdict(list)
-        for i, sentence in enumerate(out):
+        for i, sentence in enumerate(out, start=1):
             if len(sentence) >= int(min_length):
-                (lang, prob) = langid.classify(corpus_utils.list2str(sentence))
+                lang = wtl.predict_lang(corpus_utils.list2str(sentence))
                 langs[lang] +=1
                 lang_lines[lang].append(i)
             else:
