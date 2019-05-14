@@ -367,7 +367,8 @@ def generate_sentence_examples(ref, outs, src=None,
   reporter.generate_report()
   return reporter 
 
-def generate_lang_id_report(ref, outs, model,
+def generate_lang_id_report(ref, outs,
+                            model="wtl",
                             min_length=5,
                             print_lines=False,
                             print_line_numbers=False):
@@ -470,10 +471,10 @@ def main():
                       help="Number of decimals to print for floating point numbers")
   parser.add_argument('--scorer_scale', type=float, default=100, choices=[1, 100],
                       help="Set the scale of BLEU, METEOR, WER and chrF to 0-1 or 0-100 (default 0-100)")
-  parser.add_argument('--lang_id', type=str, nargs='*',
-                      default=['model=model,min_length=min_length,print_lines=False,print_line_numbers=False'],
+  parser.add_argument('--lang_id', type=str, nargs='*', default=None,
                       help="""
-                      Use language identification on output. Can specify arguments in 'arg1=val1,arg2=val2,...' format. Model: use langid or wtl (whatthelang) to identify the language of segments.
+                      Use language identification on output. Can specify arguments in 'arg1=val1,arg2=val2,...' format. 
+                      Arguments: model=[wtl,langid], min_length=int, print_lines=[True,False], print_line_numbers=[True,False]
                       Set minimum length for segments to be analyzed with language identification (the shorter the segment, the more unreliable the analysis), default=5.
                       """) 
   args = parser.parse_args()
