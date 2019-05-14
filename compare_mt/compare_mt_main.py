@@ -372,7 +372,8 @@ def generate_lang_id_report(ref, outs,
                             min_length=5,
                             print_lines=False,
                             print_line_numbers=False):
-    wtl = WhatTheLang()
+    if model=="wtl":
+        wtl = WhatTheLang()
     lang_id_reports=[]
     lang_id_lines_reports=[]
     lang_id_line_numbers_reports=[]
@@ -387,6 +388,8 @@ def generate_lang_id_report(ref, outs,
                     (lang, prob) = langid.classify(line)
                 elif model=="wtl":
                     lang = wtl.predict_lang(line)
+                else:
+                    raise NotImplementedError(f"Unknown model for language identification: '{model}'.")
                 langs[lang] +=1
                 if print_line_numbers:
                     lang_line_numbers[lang].append(i)
