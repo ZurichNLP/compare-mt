@@ -473,7 +473,8 @@ class SentenceExampleReport(Report):
 
 class LangIDreport(Report):
     
-    def __init__(self, lang_id_reports, lang_id_lines_reports, lang_id_line_numbers_reports, print_lines, print_line_numbers):
+    def __init__(self, model, lang_id_reports, lang_id_lines_reports, lang_id_line_numbers_reports, print_lines, print_line_numbers):
+        self.model= model
         self.lang_id_reports = lang_id_reports
         self.lang_id_lines_reports = lang_id_lines_reports
         self.lang_id_line_numbers_reports = lang_id_line_numbers_reports
@@ -482,30 +483,30 @@ class LangIDreport(Report):
         
         
     def print(self):
-        self.print_header('Language Identification Analysis')
+        self.print_header('Language Identification Analysis with '+ str(self.model) )
         for i, (lang_id_report, lang_id_lines_report, lang_id_line_numbers_report) in enumerate(zip(self.lang_id_reports, self.lang_id_lines_reports, self.lang_id_line_numbers_reports)):
             total_sents = sum(lang_id_report.values())
             sorted_langs = sorted(lang_id_report.items(), key=lambda v: v[1]) # sorted_langs = sorted list of tuples (lang, frequency)
             # print percentage of languages
             print("Output {}:".format(i))
             for lang, v in sorted_langs:
-                print("\t {}: {}%".format(lang, float(v/total_sents *100)))
+                print("{}: {}%".format(lang, float(v/total_sents *100)))
             # print lines classified as minority languages
             if self.print_lines:
                 print()
-                print("\t Minority Language Lines:")
-                for j in range(0,len(sorted_langs)-1):
+                print("\t Language Lines:")
+                for j in range(0,len(sorted_langs)):
                     (lang, freq) = sorted_langs[j]
                     if lang != "shorter than min_length":
-                        print("\t {}: {}".format(lang, lang_id_lines_report[lang]))
+                        print("{}: {}".format(lang, lang_id_lines_report[lang]))
                         
             if self.print_line_numbers:
                 print()
-                print("\t Minority Language Lines:")
-                for j in range(0,len(sorted_langs)-1):
+                print("\t Language Line Numbers:")
+                for j in range(0,len(sorted_langs)):
                     (lang, freq) = sorted_langs[j]
                     if lang != "shorter than min_length":
-                        print("\t {}: {}".format(lang, lang_id_line_numbers_report[lang]))
+                        print("{}: {}".format(lang, lang_id_line_numbers_report[lang]))
 
 
 def tag_str(tag, str, new_line=''):

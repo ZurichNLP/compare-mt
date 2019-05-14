@@ -367,7 +367,7 @@ def generate_sentence_examples(ref, outs, src=None,
   reporter.generate_report()
   return reporter 
 
-def generate_lang_id_report(ref, outs,
+def generate_lang_id_report(ref, outs, model,
                             min_length=5,
                             print_lines=False,
                             print_line_numbers=False):
@@ -382,13 +382,10 @@ def generate_lang_id_report(ref, outs,
         for i, sentence in enumerate(out, start=1):
             line = corpus_utils.list2str(sentence)
             if len(sentence) >= int(min_length):
-                (lang_langid, prob) = langid.classify(line)
-                lang_wtl = wtl.predict_lang(line)
-                lang = ""
-                if lang_wtl==lang_langid:
-                    lang=lang_wtl
-                else:
-                    lang="differing output between langid and wtl"
+                if model=="langid":
+                    (lang, prob) = langid.classify(line)
+                elif model=="wtl":
+                    lang = wtl.predict_lang(line)
                 langs[lang] +=1
                 if print_line_numbers:
                     lang_line_numbers[lang].append(i)
@@ -404,7 +401,7 @@ def generate_lang_id_report(ref, outs,
         lang_id_lines_reports.append(lang_lines)
         lang_id_line_numbers_reports.append(lang_line_numbers)
 
-    reporter = reporters.LangIDreport(lang_id_reports, lang_id_lines_reports, lang_id_line_numbers_reports,print_lines,print_line_numbers)
+    reporter = reporters.LangIDreport(model, lang_id_reports, lang_id_lines_reports, lang_id_line_numbers_reports,print_lines,print_line_numbers)
     reporter.generate_report()
     return reporter
 
@@ -474,9 +471,9 @@ def main():
   parser.add_argument('--scorer_scale', type=float, default=100, choices=[1, 100],
                       help="Set the scale of BLEU, METEOR, WER and chrF to 0-1 or 0-100 (default 0-100)")
   parser.add_argument('--lang_id', type=str, nargs='*',
-                      default=['min_length=min_length,print_lines=False,print_line_numbers=False'],
+                      default=['model=model,min_length=min_length,print_lines=False,print_line_numbers=False'],
                       help="""
-                      Use language identification on output. Can specify arguments in 'arg1=val1,arg2=val2,...' format.
+                      Use language identification on output. Can specify arguments in 'arg1=val1,arg2=val2,...' format. Model: use langid or wtl (whatthelang) to identify the language of segments.
                       Set minimum length for segments to be analyzed with language identification (the shorter the segment, the more unreliable the analysis), default=5.
                       """) 
   args = parser.parse_args()
