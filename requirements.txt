@@ -3,3 +3,5 @@ numpy
 matplotlib
 absl-py
 sacrebleu
+langid
+wtl
