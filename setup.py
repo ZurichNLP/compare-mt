@@ -53,7 +53,9 @@ setup(
     "numpy",
     "matplotlib",
     "absl-py",
-    "sacrebleu"
+    "sacrebleu",
+    "langid",
+    "wtl"
   ],
   include_package_data=True,
 )

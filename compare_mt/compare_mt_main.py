@@ -1,6 +1,9 @@
 # Overall imports
 import argparse
 import operator
+from whatthelang import WhatTheLang
+import langid
+from collections import defaultdict
 
 # In-package imports
 from compare_mt import ngram_utils
@@ -421,6 +424,48 @@ def generate_repetitions_examples(ref, outs, src=None, report_length=10, title=N
     return reporter
 
 
+def generate_lang_id_report(ref, outs,
+                            model="wtl",
+                            min_length=5,
+                            print_lines=False,
+                            print_line_numbers=False):
+    if model=="wtl":
+        wtl = WhatTheLang()
+    lang_id_reports=[]
+    lang_id_lines_reports=[]
+    lang_id_line_numbers_reports=[]
+    for out in outs:
+        langs = defaultdict(int)
+        lang_lines = defaultdict(list)
+        lang_line_numbers = defaultdict(list)
+        for i, sentence in enumerate(out, start=1):
+            line = corpus_utils.list2str(sentence)
+            if len(sentence) >= int(min_length):
+                if model=="langid":
+                    (lang, prob) = langid.classify(line)
+                elif model=="wtl":
+                    lang = wtl.predict_lang(line)
+                else:
+                    raise NotImplementedError(f"Unknown model for language identification: '{model}'.")
+                langs[lang] +=1
+                if print_line_numbers:
+                    lang_line_numbers[lang].append(i)
+                if print_lines:    
+                    lang_lines[lang].append(line)
+            else:
+                langs["shorter than min_length"] +=1
+                if print_line_numbers:
+                    lang_line_numbers["shorter than min_length"].append(i)
+                if print_lines:
+                    lang_lines["shorter than min_length"].append(line)
+        lang_id_reports.append(langs)  
+        lang_id_lines_reports.append(lang_lines)
+        lang_id_line_numbers_reports.append(lang_line_numbers)
+
+    reporter = reporters.LangIDreport(model, lang_id_reports, lang_id_lines_reports, lang_id_line_numbers_reports,print_lines,print_line_numbers)
+    reporter.generate_report()
+    return reporter
+
 def main():
   parser = argparse.ArgumentParser(
       description='Program to compare MT results',
@@ -499,6 +544,12 @@ def main():
                       help="Number of decimals to print for floating point numbers")
   parser.add_argument('--scorer_scale', type=float, default=100, choices=[1, 100],
                       help="Set the scale of BLEU, METEOR, WER and chrF to 0-1 or 0-100 (default 0-100)")
+  parser.add_argument('--lang_id', type=str, nargs='*', default=None,
+                      help="""
+                      Use language identification on output. Can specify arguments in 'arg1=val1,arg2=val2,...' format. 
+                      Arguments: model=[wtl,langid], min_length=int, print_lines=[True,False], print_line_numbers=[True,False]
+                      Set minimum length for segments to be analyzed with language identification (the shorter the segment, the more unreliable the analysis), default=5.
+                      """) 
   args = parser.parse_args()
 
   # Set formatting
@@ -524,7 +575,8 @@ def main():
     (args.compare_src_word_accuracies, generate_src_word_accuracy_report, 'Source Word Accuracies', True),
     (args.compare_sentence_buckets, generate_sentence_bucketed_report, 'Sentence Buckets', False),
     (args.compare_repetitions, generate_repetitions_report, 'Repetition Statistics', True),
-    (args.compare_repetition_examples, generate_repetitions_examples, 'Repetition Examples', True)]
+    (args.compare_repetition_examples, generate_repetitions_examples, 'Repetition Examples', True),
+    (args.lang_id, generate_lang_id_report, 'Language Identification', False)]
   if len(outs) > 1:
     report_types += [
       (args.compare_ngrams, generate_ngram_report, 'Characteristic N-grams', False),
