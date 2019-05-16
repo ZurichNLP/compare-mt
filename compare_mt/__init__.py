@@ -7,6 +7,7 @@ import compare_mt.bucketers
 import compare_mt.reporters
 import compare_mt.arg_utils
 import compare_mt.print_utils
+import compare_mt.repetition_utils
 
 
-__version__ = "0.2.3"
+__version__ = "0.2.4"

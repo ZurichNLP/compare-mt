@@ -508,6 +508,115 @@ class LangIDreport(Report):
                         print("{}: {}".format(lang, lang_id_line_numbers_report[lang]))
 
 
+class RepetitionReport(Report):
+
+  def __init__(self, ref=None, outs=None, src=None, title=None, repetition_stats=None,
+               adjacent=True, ngram_order=1, subtract_legitimate_reps=False):
+    self.ref = ref
+    self.outs = outs
+    self.src = src
+    self.repetition_stats = repetition_stats
+    self.adjacent = adjacent
+    self.ngram_order = ngram_order
+    self.subtract_legitimate_reps = subtract_legitimate_reps
+
+    self.output_fig_file = f'{next_fig_id()}-total-reps'
+
+    if title:
+      self.title = title
+    else:
+      self.title = f'adjacent={adjacent}, ngram_order={ngram_order}, subtract_legitimate_reps={subtract_legitimate_reps}'
+
+  def print(self):
+    self.print_header('Repetition Statistics Analysis')
+    print(f'--- {self.title}')
+    print(f'\tTOTAL REPS IN CORPUS')
+    for sys_name, reps_total in zip(sys_names, self.repetition_stats):
+      print(f'{sys_name}\t{reps_total}')
+    print()
+
+  def plot(self, output_directory='outputs', output_fig_file='rep-stats', output_fig_format='pdf'):
+    sys = [[score] for score in self.repetition_stats]
+
+    make_bar_chart(sys,
+                   output_directory, output_fig_file,
+                   output_fig_format=output_fig_format,
+                   xlabel="", ylabel="TOTAL_REPS_IN_CORPUS",
+                   xticklabels=None)
+
+  def html_content(self, output_directory=None):
+
+    html = tag_str('p', self.title)
+
+    table = [['', 'TOTAL_REPS_IN_CORPUS']]
+
+    for sys_name, reps_total in zip(sys_names, self.repetition_stats):
+
+      table.append([f'{sys_name}', f'{reps_total}'])
+
+    html += html_table(table, None)
+
+    for ext in ('png', 'pdf'):
+      self.plot(output_directory, self.output_fig_file, ext)
+    html += html_img_reference(self.output_fig_file, 'Repetition Statistics Analysis')
+
+    return html
+
+
+class RepetitionExamplesReport(Report):
+
+  def __init__(self, ref=None, outs=None, src=None, title=None, report_length=10, repetition_examples=None,
+               adjacent=True, ngram_order=1, ignore_legitimate_reps=False):
+    self.ref = ref
+    self.outs = outs
+    self.src = src
+    self.title = title
+    self.report_length = report_length
+    self.repetition_examples = repetition_examples
+
+    if title:
+      self.title = title
+    else:
+      self.title = f'adjacent={adjacent}, ngram_order={ngram_order}, ignore_legitimate_reps={ignore_legitimate_reps}, report_length={report_length}'
+
+  def print(self):
+    self.print_header('Repetition Examples Analysis')
+    print(f'--- {self.title}')
+
+    for sys_name, examples, out in zip(sys_names, self.repetition_examples, self.outs):
+      print()
+      print(f'--- {self.report_length} worst examples from {sys_name}')
+      for index in examples:
+        if self.src:
+          print(f"Src:  {' '.join(self.src[index])}")
+        print(f"Ref:  {' '.join(self.ref[index])}")
+        print(f"{sys_name}: {' '.join(out[index])}")
+        print()
+    print()
+
+  def plot(self, output_directory, output_fig_file, output_fig_format='pdf'):
+    pass
+
+  def html_content(self, output_directory=None):
+
+    html = tag_str('p', self.title)
+
+    for sys_name, examples, out in zip(sys_names, self.repetition_examples, self.outs):
+      html += tag_str('h4', f'{self.report_length} worst examples from {sys_name}')
+
+      for index in examples:
+        table = [['', 'Output']]
+
+        if self.src:
+          table.append(['Src', ' '.join(self.src[index])])
+        table.append(['Ref', ' '.join(self.ref[index])])
+        table.append([f'{sys_name}', ' '.join(out[index])])
+
+        html += html_table(table, None)
+
+    return html
+
+
 def tag_str(tag, str, new_line=''):
   return f'<{tag}>{new_line} {str} {new_line}</{tag}>'
 

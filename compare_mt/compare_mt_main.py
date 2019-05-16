@@ -15,6 +15,7 @@ from compare_mt import bucketers
 from compare_mt import reporters
 from compare_mt import arg_utils
 from compare_mt import formatting
+from compare_mt import repetition_utils
 
 def generate_score_report(ref, outs,
                        score_type='bleu',
@@ -365,7 +366,63 @@ def generate_sentence_examples(ref, outs, src=None,
                                              compare_directions=direcs,
                                              title=title)
   reporter.generate_report()
-  return reporter 
+  return reporter
+
+
+def generate_repetitions_report(ref, outs, src=None, title=None, adjacent=True,
+                                ngram_order=1, subtract_legitimate_reps=False):
+
+    ngram_order = int(ngram_order)
+
+    repetition_stats = repetition_utils.repetition_stats(ref=ref,
+                                                         outs=outs,
+                                                         src=src,
+                                                         adjacent=adjacent,
+                                                         ngram_order=ngram_order,
+                                                         subtract_legitimate_reps=subtract_legitimate_reps)
+
+    reporter = reporters.RepetitionReport(ref=ref,
+                                          outs=outs,
+                                          src=src,
+                                          repetition_stats=repetition_stats,
+                                          title=title,
+                                          adjacent=adjacent,
+                                          ngram_order=ngram_order,
+                                          subtract_legitimate_reps=subtract_legitimate_reps)
+
+    reporter.generate_report()
+
+    return reporter
+
+
+def generate_repetitions_examples(ref, outs, src=None, report_length=10, title=None, adjacent=True,
+                                  ngram_order=1, ignore_legitimate_reps=False):
+
+    report_length = int(report_length)
+    ngram_order = int(ngram_order)
+
+    repetition_examples = repetition_utils.repetition_examples(ref=ref,
+                                                               outs=outs,
+                                                               src=src,
+                                                               num_examples=report_length,
+                                                               adjacent=adjacent,
+                                                               ngram_order=ngram_order,
+                                                               ignore_legitimate_reps=ignore_legitimate_reps)
+
+    reporter = reporters.RepetitionExamplesReport(ref=ref,
+                                                  outs=outs,
+                                                  src=src,
+                                                  repetition_examples=repetition_examples,
+                                                  title=title,
+                                                  report_length=report_length,
+                                                  adjacent=adjacent,
+                                                  ngram_order=ngram_order,
+                                                  ignore_legitimate_reps=ignore_legitimate_reps)
+
+    reporter.generate_report()
+
+    return reporter
+
 
 def generate_lang_id_report(ref, outs,
                             model="wtl",
@@ -461,6 +518,19 @@ def main():
                       Compare sentences. Can specify arguments in 'arg1=val1,arg2=val2,...' format.
                       See documentation for 'generate_sentence_examples' to see which arguments are available.
                       """)
+  parser.add_argument('--compare_repetitions', type=str, nargs='*',
+                      default=None,
+                      help="""
+                        Compare repetition statistics. Can specify arguments in 'arg1=val1,arg2=val2,...' format.
+                        See documentation for 'generate_repetitions_report' to see which arguments are available.
+                        """)
+  parser.add_argument('--compare_repetition_examples', type=str, nargs='*',
+                      default=None,
+                      help="""
+                        Compare sentences that contain repetitions. Can specify arguments in 'arg1=val1,arg2=val2,...' format.
+                        See documentation for 'generate_repetition_examples' to see which arguments are available.
+                        """)
+
   parser.add_argument('--output_directory', type=str, default=None,
                       help="""
                       A path to a directory where a graphical report will be saved. Open index.html in the directory
@@ -504,6 +574,8 @@ def main():
     (args.compare_word_accuracies, generate_word_accuracy_report, 'Word Accuracies', False),
     (args.compare_src_word_accuracies, generate_src_word_accuracy_report, 'Source Word Accuracies', True),
     (args.compare_sentence_buckets, generate_sentence_bucketed_report, 'Sentence Buckets', False),
+    (args.compare_repetitions, generate_repetitions_report, 'Repetition Statistics', True),
+    (args.compare_repetition_examples, generate_repetitions_examples, 'Repetition Examples', True),
     (args.lang_id, generate_lang_id_report, 'Language Identification', False)]
   if len(outs) > 1:
     report_types += [
