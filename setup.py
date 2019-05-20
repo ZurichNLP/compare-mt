@@ -55,7 +55,7 @@ setup(
     "absl-py",
     "sacrebleu",
     "langid",
-    "wtl"
+    "whatthelang"
   ],
   include_package_data=True,
 )
